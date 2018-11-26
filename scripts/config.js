@@ -79,13 +79,14 @@ config.defaults({
 			// scale
 			// width
 		},
-		zip: true,
+		zip: false,
 	},
 	paths: {
 		// 4klang
 		'7z': '7z',
 		// 8klang
-		crinkler: 'crinkler',
+		crinkler: 'G:\\Kush\\Documents\\Demoscene\\crinkler20a\\crinkler.exe',
+		minifier: 'tools\\shader_minifier.exe',
 		ffmpeg: 'ffmpeg',
 		nasm: 'nasm',
 		// oidos

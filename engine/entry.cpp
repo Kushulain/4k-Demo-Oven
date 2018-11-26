@@ -9,6 +9,7 @@
 #ifdef DEBUG
 #include <iostream>
 #endif
+#include "shader_min.h"
 
 void audioStart();
 float audioGetTime();
@@ -108,7 +109,7 @@ void main()
 	GLint program = glCreateProgram();
 	GLint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-	glShaderSource(fragmentShader, 1, &shaderSource, 0);
+	glShaderSource(fragmentShader, 1, &shader_glsl, 0);
 #ifdef DEBUG
 	glGetShaderInfoLog(fragmentShader, sizeof(str), NULL, str);
   if (str[0] != '\0')
@@ -159,11 +160,11 @@ void main()
 #ifdef DEBUG
     //this displays the indices for each uniform, it helps if you want to hardcode indices in the render loop to save line of code for release version
     PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
-    printf ("uniform id for _ : %ld\n", glGetUniformLocation(program,"_"));
-    printf ("uniform id for PASSINDEX : %ld\n", glGetUniformLocation(program,"PASSINDEX"));
-    printf ("uniform id for b0 : %ld\n", glGetUniformLocation(program,"b0"));
-    printf ("uniform id for b1 : %ld\n", glGetUniformLocation(program,"b1"));
-    printf ("uniform id for b2 : %ld\n", glGetUniformLocation(program,"b2"));
+    printf ("uniform id for VAR__ : %ld\n", glGetUniformLocation(program,"s"));
+    printf ("uniform id for VAR_PASSINDEX : %ld\n", glGetUniformLocation(program,"f"));
+    printf ("uniform id for VAR_B0 : %ld\n", glGetUniformLocation(program,"i"));
+    printf ("uniform id for VAR_B1 : %ld\n", glGetUniformLocation(program,"g"));
+    printf ("uniform id for VAR_B2 : %ld\n", glGetUniformLocation(program,"a"));
 #endif
 
 #ifdef AUDIO_TEXTURE

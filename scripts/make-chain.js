@@ -185,12 +185,18 @@ function makeChain(config, options) {
 				return writeFile(join(options.buildDirectory, 'shader.glsl'), newShader);
 			}))
 
-		.then(() => spawn('node', [
-			join('node_modules', 'glsl-unit', 'bin', 'template_glsl_compiler.js'),
-			'--input=' + join(options.buildDirectory, 'shader.glsl'),
-			'--variable_renaming=INTERNAL',
-			'--output=' + join(options.buildDirectory, 'shader.min.glsl'),
+		.then(() => spawn(config.get('paths:minifier'), [
+			join(options.buildDirectory, 'shader.glsl'),
+			'-o',
+			join(options.buildDirectory, 'shader_min.h')
+				// join(options.buildDirectory, 'shader.glsl'),
 		]))
+		// .then(() => spawn('node', [
+		// 	join('node_modules', 'glsl-unit', 'bin', 'template_glsl_compiler.js'),
+		// 	'--input=' + join(options.buildDirectory, 'shader.glsl'),
+		// 	'--variable_renaming=INTERNAL',
+		// 	'--output=' + join(options.buildDirectory, 'shader.min.glsl'),
+		// ]))
 
 		.then(() => readFile(join(options.buildDirectory, options.nominify ? 'shader.glsl' : 'shader.min.glsl')))
 		.then(contents => {
@@ -205,7 +211,6 @@ function makeChain(config, options) {
 			}
 
 			const headerContents = [
-				'static const char *shaderSource = "' + shader.replace(/\r/g, '') + '";',
 				'#define UNIFORM_FLOAT_COUNT ' + uniforms.length,
 				'static float uniforms[UNIFORM_FLOAT_COUNT];'
 			];
