@@ -40,19 +40,20 @@ typedef void (APIENTRYP PFNGLGETSHADERINFOLOGPROC) (GLuint shader, GLsizei bufSi
 typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 typedef void (APIENTRYP PFNGLDEBUGMESSAGECALLBACKPROC) (GLDEBUGPROC callback, const void *userParam);
 typedef void (APIENTRYP PFNGLDEBUGMESSAGECONTROLPROC) (GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled);
-typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
+typedef void (APIENTRYP PFNGLGETPROGRAMIVPROC) (GLuint program, GLenum pname, GLint *params);
+typedef void (APIENTRYP PFNGLGETSHADERIVPROC) (GLuint shader, GLenum pname, GLint *params);
+typedef void (APIENTRYP PFNGLGETPROGRAMINFOLOGPROC) (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS 0x8242
 #define GL_DEBUG_OUTPUT 0x92E0
+#define GL_LINK_STATUS 0x8B82
+#define GL_COMPILE_STATUS 0x8B81
+#define GL_INFO_LOG_LENGTH 0x8B84
 #endif
+
+typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
 // end of glext.h fragment
 
-#ifdef FRAMEBUFFER_NEED
-#define GL_EXT_FUNCTION_COUNT 14
-#elif defined(TEXTURE_NEED)
-#define GL_EXT_FUNCTION_COUNT 10
-#else
-#define GL_EXT_FUNCTION_COUNT 8
-#endif
+#define GL_EXT_FUNCTION_COUNT 15
 
 
 static const char *glExtFunctionNames[] = {
@@ -65,17 +66,14 @@ static const char *glExtFunctionNames[] = {
 	"glUseProgram",
 	"glUniform1fv",
 
-	#ifdef TEXTURE_NEED
 	"glUniform1i",
 	"glActiveTexture",
-	#endif
 
-	#ifdef FRAMEBUFFER_NEED
 	"glGenFramebuffers",
 	"glBindFramebuffer",
 	"glFramebufferTexture2D",
 	"glBlitFramebuffer",
-	#endif
+	"glGetUniformLocation"
 
 };
 
@@ -90,14 +88,11 @@ static void *glExtFunctions[GL_EXT_FUNCTION_COUNT];
 #define glUseProgram ((PFNGLUSEPROGRAMPROC)glExtFunctions[6])
 #define glUniform1fv ((PFNGLUNIFORM1FVPROC)glExtFunctions[7])
 
-#ifdef TEXTURE_NEED
 #define glUniform1i ((PFNGLUNIFORM1IPROC)glExtFunctions[8])
 #define glActiveTexture ((PFNGLACTIVETEXTUREPROC)glExtFunctions[9])
-#endif
 
-#ifdef FRAMEBUFFER_NEED
 #define glGenFramebuffers ((PFNGLGENFRAMEBUFFERSEXTPROC)glExtFunctions[10])
 #define glBindFramebuffer ((PFNGLBINDFRAMEBUFFEREXTPROC)glExtFunctions[11])
 #define glFramebufferTexture2D ((PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)glExtFunctions[12])
 #define glBlitFramebuffer ((PFNGLBLITFRAMEBUFFERPROC)glExtFunctions[13])
-#endif
+#define glGetUniformLocation ((PFNGLGETUNIFORMLOCATIONPROC)glExtFunctions[14])

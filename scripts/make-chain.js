@@ -188,7 +188,9 @@ function makeChain(config, options) {
 		.then(() => spawn(config.get('paths:minifier'), [
 			join(options.buildDirectory, 'shader.glsl'),
 			'-o',
-			join(options.buildDirectory, 'shader_min.h')
+			join(options.buildDirectory, 'shader_min.h'),
+			'--no-renaming-list',
+			'Z,main'
 				// join(options.buildDirectory, 'shader.glsl'),
 		]))
 		// .then(() => spawn('node', [

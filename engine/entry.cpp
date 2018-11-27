@@ -79,7 +79,9 @@ void main()
 	// Display a black screen while loading audio.
 	wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
 
-	for (auto i = 0; i < GL_EXT_FUNCTION_COUNT; ++i)
+  int i=0;
+
+	for (i = 0; i < GL_EXT_FUNCTION_COUNT; ++i)
 		glExtFunctions[i] = wglGetProcAddress(glExtFunctionNames[i]);
 
 	#ifdef DEBUG
@@ -117,6 +119,11 @@ void main()
 #endif
 
 	glCompileShader(fragmentShader);
+
+  //PFNGLGETPROGRAMIVPROC glGetProgramiv = (PFNGLGETPROGRAMIVPROC)wglGetProcAddress("glGetProgramiv");
+
+
+
 #ifdef DEBUG
 	glGetShaderInfoLog(fragmentShader, sizeof(str), NULL, str);
   if (str[0] != '\0')
@@ -125,7 +132,24 @@ void main()
 
 	glAttachShader(program, fragmentShader);
 	glLinkProgram(program);
+
+#ifdef DEBUG
+  PFNGLGETPROGRAMIVPROC glGetProgramiv = (PFNGLGETPROGRAMIVPROC)wglGetProcAddress("glGetProgramiv");
+  PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)wglGetProcAddress("glGetProgramInfoLog");
+    GLint params;
+    PFNGLGETSHADERIVPROC glGetShaderiv = (PFNGLGETSHADERIVPROC)wglGetProcAddress("glGetShaderiv");
+    glGetShaderiv(fragmentShader,GL_COMPILE_STATUS,&params);
+    printf("%d",params);
+  int maxLength;
+    int length;
+    glGetProgramiv(program,GL_INFO_LOG_LENGTH,&maxLength);
+    char* log = new char[maxLength];
+    glGetProgramInfoLog(program,maxLength,&length,log);
+    printf("%s\n", log);
+#endif
+
 	glUseProgram(program);
+  //CheckGLError();
 
 #ifndef FORCE_RESOLUTION
 	uniformResolutionHeight = (float)height;
@@ -135,13 +159,13 @@ void main()
 #ifdef BUFFERS
   //As we use 2 textures for each buffer for each buffer, "swapped" will tell which texture to render, changes at each frame
   //dualbuffering prevents reading and writing to the same render target
-	bool swapped;
+	bool swapped = false;
 
   //Here we create textures, you can change the size of textures, filtering, add mipmaps, to suit your need
 	// GLuint textureID[BUFFERS*2];
   // glGenTextures(BUFFERS*2,textureID);
 
-	for (int i=0; i<BUFFERS*2; i++)
+	for (i=0; i<BUFFERS*2; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D, i);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -159,12 +183,12 @@ void main()
 
 #ifdef DEBUG
     //this displays the indices for each uniform, it helps if you want to hardcode indices in the render loop to save line of code for release version
-    PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
-    printf ("uniform id for VAR__ : %ld\n", glGetUniformLocation(program,"s"));
-    printf ("uniform id for VAR_PASSINDEX : %ld\n", glGetUniformLocation(program,"f"));
-    printf ("uniform id for VAR_B0 : %ld\n", glGetUniformLocation(program,"i"));
-    printf ("uniform id for VAR_B1 : %ld\n", glGetUniformLocation(program,"g"));
-    printf ("uniform id for VAR_B2 : %ld\n", glGetUniformLocation(program,"a"));
+    //PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
+    printf ("uniform id for VAR__ : %ld\n", glGetUniformLocation(program,"f"));
+    printf ("uniform id for VAR_PASSINDEX : %ld\n", glGetUniformLocation(program,"c"));
+    printf ("uniform id for VAR_B0 : %ld\n", glGetUniformLocation(program,"s"));
+    printf ("uniform id for VAR_B1 : %ld\n", glGetUniformLocation(program,"v"));
+    printf ("uniform id for VAR_B2 : %ld\n", glGetUniformLocation(program,"m"));
 #endif
 
 #ifdef AUDIO_TEXTURE
@@ -178,14 +202,44 @@ void main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 1234, 0);
 
-	glRects(-1, -1, 1, 1);
+  // glRects(-1,-1,1,1);
+  // glFinish();
+
+  // for (int i=0; i<4; i++)
+  // {
+  //   // float h = 0.5;//-1+i*0.5;
+  //   // glRects(-1,h,1,h+0.5);
+  //   glReadPixels(0,  0, i*SOUND_TEXTURE_SIZE/4,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[i*MAX_SAMPLES/4]);
+
+  // }
+
+
+
+    glRects(-1,-1,0,0);
+    glFinish();
+    glRects(0,-1,1,0);
+    glFinish();
+    glRects(0,0,1,1);
+    glFinish();
+    glRects(-1,0,0,1);
+    glFinish();
+    //
+
+  	glReadPixels(0,  0,                      SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,soundBuffer);
+    glFinish();
+  	glReadPixels(0,  SOUND_TEXTURE_SIZE/4,   SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[MAX_SAMPLES/4]);
+    glFinish();
+  	glReadPixels(0,  2*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[2*MAX_SAMPLES/4]);
+    glFinish();
+  	glReadPixels(0,  3*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[3*MAX_SAMPLES/4]);
+    glFinish();
 
 	glReadPixels(0,0,SOUND_TEXTURE_SIZE,SOUND_TEXTURE_SIZE,GL_RGBA,GL_FLOAT,soundBuffer);
   glViewport(0,0,width,height);
   glFinish();
 
 #ifdef DEBUG
-	for (int i=0; i<10; i++)
+	for (i=0; i<10; i++)
 	   printf("sound sample[%d] L/R : %f/%f \n", i, soundBuffer[i*2], soundBuffer[i*2+1]);
 #endif
 #endif
@@ -206,16 +260,23 @@ void main()
 #ifdef BUFFERS
     glBindFramebuffer (GL_FRAMEBUFFER, fbo);
 
-		for (auto i=0; i<BUFFERS; i++)
+		for (i=0; i<BUFFERS; i++)
 		{
       //assign uniform value with hardcoded indices, use glGetUniformLocation is better but adds more line of codes
 			//uniforms can be automatically removed if not used, thus removes/offsets all the following uniforms !
+      // glUniform1fv(glGetUniformLocation(program,VAR__),UNIFORM_FLOAT_COUNT,uniforms);
+      // glUniform1i(glGetUniformLocation(program,VAR_PASSINDEX),i);
+      glUniform1i(glGetUniformLocation(program,VAR_B0),0);
+      glUniform1i(glGetUniformLocation(program,VAR_B1),1);
+      glUniform1i(glGetUniformLocation(program,VAR_B2),2);
+
       glUniform1i(0,i); //int : (PASSINDEX)
       glUniform1fv(1, UNIFORM_FLOAT_COUNT, uniforms); // floats "_[UNIFORM_FLOAT_COUNT]"
-      glUniform1i(UNIFORM_FLOAT_COUNT+1+i,i); // samplers b0, b1 ..
+      // glUniform1i(UNIFORM_FLOAT_COUNT+1+i,i); // samplers b0, b1 ..
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, i*2+swapped, 0);
 			glRects(-1, -1, 1, 1);
+      glFlush();
 
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, i*2+swapped);
