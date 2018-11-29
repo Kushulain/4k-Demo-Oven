@@ -241,6 +241,9 @@ void main()
 #ifdef DEBUG
 	for (i=0; i<10; i++)
 	   printf("sound sample[%d] L/R : %f/%f \n", i, soundBuffer[i*2], soundBuffer[i*2+1]);
+     GLint maxUniformVectors;
+     glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniformVectors);
+     printf("%d",maxUniformVectors);
 #endif
 #endif
 	audioStart();

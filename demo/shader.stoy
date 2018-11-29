@@ -2,14 +2,19 @@ uniform float time;
 uniform vec2 synth_Resolution;
 
 // begin
-
+#define s(x) fract(sin(123523.9898*x)*43758.5453)
 //#define g(a,b) Z(a,b)
 
 uniform sampler2D b0;
 uniform sampler2D b1;
 uniform sampler2D b2;
 uniform int	PASSINDEX;
-
+// #define d1 Xs[]=float[](.7,.4,.3,.7,.3,.4,.7,.1,.6,.3,.3,.6,.6,.5,.3,.7,0.2,.9,.1,.7,0.4,.3,.5,.6;.3,.7,.6,.4,.3,.3,.4,.7,.4,.3,.5,.3,.1,.5,.4,.2,.2,.5,.2,.7,.3,.5,.3,.6,.4,.3,.7,.6,.3,.3,.4,.7,.7,.1,.4,.6,.3,.6,.3,.4,.4,.3,.6,.3,.3,.3,.4,.6,.6,.2,.7,.2,.4,.5,.5,.7,.3,.3.6,.6,.3,.4,.6,.7,.1,.3,.4,.5,.0,.7,.2,.7,.4,.3,.7,.3,.0,.7,.2,.7);
+// #define d2 Ys[]=float[](.2,.8,.2,.7,1.,.0,.7,.2,.6,.6,.2,.4,1.,.0,.7,.2,0.2,.7,.5,.2,.0,1.,.6,.7,.3,.7,-.1,.1,1.,.1,.7,.3,.7,.5,.7,.2,.5,.7,.0,.2,1.,.1,.4,.7,.8,1.,.2,.2,.0,.6,.6,.2,.6,.1,.7,.2,.6,.6,.2,.6,.1,.4,.6,.0,.1,.4,.6,.0,.6,.1,.6,.5,.6,.5,.4,.1,1.,.1,.7,.7,.6,3,.3,.5,.6,.1,.5,.4,0.6,.1,.6,.3,1.,.3,.3,.6,.6,.3,.7,.0,.7,.6,.3,.2);
+// #define d3 sentences[]= int[](8,26,21,4,26,18,4,4,13,26,19,7,8,13,6,18,26,24,14,20,26,15,4,14,15,11,4,26,22,14,20,11,3,26,13,14,19,26,1,4,11,8,4,21,4,0,19,19,0,2,10,26,18,7,8,15,18,26,14,13,26,5,8,17,4,26,14,5,5,26,19,7,4,26,18,7,14,20,11,3,4,17,26,14,5,26,14,17,8,14,13,8,26,22,0,19,2,7,4,3,26,2,26,1,4,0,12,18,26,6,11,8,19,19,4,17,26,8,13,26,19,7,4,26,3,0,17,10,26,13,4,0,17,26,19,7,4,26,19,0,13,13,7,0,20,18,4,17,26,6,0,19,4);
+// float d1;
+// float d2;
+// int d3;
 // float t(float startA, float startB, float endA, float endB)
 // {
 //     startA += intensityStart;
@@ -57,11 +62,6 @@ float pixelSize;
 
 float intensityStart;
 float gTime;
-
-float t(float K,float L,float M,float N){K+=intensityStart;L+=intensityStart;M+=intensityStart;N+=intensityStart;return clamp(smoothstep(K,L,gTime),0.,1.)*clamp(smoothstep(N,M,gTime),0.,1.);}
-float t(float K,float L,float M){return t(K,L,L,M);}
-float t(float K,float L){return t(K,K+.1,L,L+.1);}
-
 vec4 currentNoiseFormants;
 float currentNoiseAmount;
 
@@ -69,12 +69,17 @@ vec4 currentVowelFormants;
 float currentVowelAmount;
 vec4 currentVowelFormants2;
 float currentVowelAmount2;
-
 float freqOffset;
 float TAU = 6.2831;
 
 vec4 formantFilterFactor = vec4(0.0,0.4,0.8,1.5);
 float formantFilterValue = 1.0;
+
+float t(float K,float L,float M,float N){K+=intensityStart;L+=intensityStart;M+=intensityStart;N+=intensityStart;return clamp(smoothstep(K,L,gTime),0.,1.)*clamp(smoothstep(N,M,gTime),0.,1.);}
+float t(float K,float L,float M){return t(K,L,L,M);}
+float t(float K,float L){return t(K,K+.1,L,L+.1);}
+
+
 
 float Sing(float v)
 {
@@ -100,11 +105,6 @@ float powerize(float f, float p)
         return -(pow(abs(f),p));
 }
 
-float Noisef( float x )
-{
-    return fract( sin( 123523.9898 * x ) * 43758.5453 );
-}
-
 //not used : looks like my hardware don't want me to use it inside for loops
 float QFilter(float v, float position, float power)
 {
@@ -119,12 +119,12 @@ float QFilter(float v, float position, float power)
 //not used, generate many sin, with higher intensity near the ideal freq
 float BandNoise(float freqband)
 {
-    float result = 0.0;
+    float result = 0.;
 
     float freqCount = 160.0;
     for (float i=0.; i<freqCount; i++)
     {
-        float stepf = (i/freqCount) + Noisef((i)*0.0001)*0.253;
+        float stepf = (i/freqCount) + s((i)*0.0001)*0.253;
         float volume = max(1.-10.*abs(stepf-freqband/5000.),0.0);//1.0-(i/120.0); // //QFilter(stepf,freqband/5000.0,20.0)
         result += volume*sin(gTime*(stepf * 5000.0) * TAU);
     }
@@ -140,7 +140,7 @@ float BandNoiseOpti(float freqband, float ltime)
     float freqCount = 60.0;
     for (float i=0.; i<freqCount; i++)
     {
-        float stepf = freqband/5000. + 0.1*(i/freqCount) * (Noisef((i)*0.0001)*2.0-1.0);
+        float stepf = freqband/5000. + 0.1*(i/freqCount) * (s((i)*0.0001)*2.0-1.0);
         float volume = pow(max(0.0,1.0-(i/freqCount)),2.0);//1.0-(i/120.0); // //QFilter(stepf,freqband/5000.0,20.0)
         result += volume*sin(ltime*(stepf * 5000.0) * TAU);
     }
@@ -151,7 +151,7 @@ float BandNoiseOpti(float freqband, float ltime)
 //vowel, fundamental, 4 formant, bit of noise
 float Vowel(vec4 formants)
 {
-    float result;
+    float result = 0.;
 
     float base;
 
@@ -223,7 +223,7 @@ float MakeSoundV()
     float base = Sing(1.);
     result += base*0.04;
 
-    result += result*Noisef(gTime*0.1);
+    result += result*s(gTime*0.1);
 
     return result;
 }
@@ -249,7 +249,7 @@ float MakeSoundP(float start)
     	//base *= (sin(freq*TAU*gTime*exp(-1.8-progress01*2.0)));
 
         result = base*vol;
-        result *= Noisef(gTime*0.001)*clamp((1.0-progress01*10.0),0.,1.);
+        result *= s(gTime*0.001)*clamp((1.0-progress01*10.0),0.,1.);
     }
 
     //float kick = sin(t*220.0* exp(-t* .75));
@@ -283,7 +283,7 @@ float leadtime;
 
 float SynthLead(float _time, float end, float note)
 {
-    float results;
+    float results = 0.;
     float count = 20.0;
     float curNote = note;
 
@@ -349,7 +349,9 @@ float Bass(float _time)
 
 float Speech(float _time)
 {
-
+    currentVowelAmount = 0.;
+    currentVowelAmount2 = 0.;
+    currentNoiseAmount = 0.;
     float voiceOutput = 0.0;
     gfreq= 98.;
     formantFilterValue = 1.0;
@@ -754,18 +756,6 @@ float Speech(float _time)
         //voiceOutput += BandNoise(1000.0);
     }
 
-
-
-    _time = mod(_time,1.0);
-
-    if (false)
-    {
-        if (_time < 0.05)
-            N(T,1.);
-        //else if (_time < 2.0)
-        //    N(E,1.);
-    }
-
     voiceOutput += Noise(currentNoiseFormants) * currentNoiseAmount;
     voiceOutput += Vowel(currentVowelFormants) * currentVowelAmount;
     voiceOutput += Vowel(currentVowelFormants2) * currentVowelAmount2;
@@ -774,14 +764,14 @@ float Speech(float _time)
     return voiceOutput;
 }
 
-// vec2 test(float tt)
-// {
-//   return vec2(Bass(tt),Bass(tt));
-// }
+vec2 test(float tt)
+{
+  return vec2(Bass(tt),Bass(tt));
+}
 
 vec2 SoundMain( float _time )
 {
-    // return test(_time);
+    //return test(_time);
     //_time = fract(_time);
     //_time = mod(_time,6.5);
     //_time -= 5.0;
@@ -795,14 +785,14 @@ vec2 SoundMain( float _time )
     sOutput += vec2(0.5*Speech(_time*.9));
     //gTime /= 0.9;
 
-    vec2 music;// = Lead(_time);
+    vec2 music = vec2(0.,0.);// = Lead(_time);
 
 
     float revCount = 50.0;
 
     for (float i=0.; i<revCount; i++)
     {
-        float reverbtime = _time + 0.08 * sin(0.01*_time + Noisef(i)*TAU)*i;
+        float reverbtime = _time + 0.08 * sin(0.01*_time + s(i)*TAU)*i;
         //float reverbtime = _time*(1.+Noise(i)*0.01*i);
         float resResult = (Bass(reverbtime) + Lead(reverbtime)) / (0.02*revCount*(i+1.));
         if (i < 4.)
@@ -837,7 +827,7 @@ void main() {
       float t = 2.*((gl_FragCoord.x-0.5) + (gl_FragCoord.y-0.5)*2048.0)/44100.;
       vec2 res = SoundMain(t).xx;
       gl_FragColor.xy = res;
-      res = SoundMain(t).xx;
+      res = SoundMain(t+(1./44100.)).xx;
       gl_FragColor.zw = res;
     }
     if (PASSINDEX == 0)

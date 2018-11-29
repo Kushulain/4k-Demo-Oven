@@ -48,6 +48,7 @@ typedef void (APIENTRYP PFNGLGETPROGRAMINFOLOGPROC) (GLuint program, GLsizei buf
 #define GL_LINK_STATUS 0x8B82
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_INFO_LOG_LENGTH 0x8B84
+#define GL_MAX_VERTEX_UNIFORM_VECTORS     0x8DFB
 #endif
 
 typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
