@@ -71,9 +71,4 @@ float audioGetTime()
 	return (float)mmTime.u.sample / (float)SAMPLE_RATE;
 }
 
-bool audioIsFinished()
-{
-	return (mmTime.u.sample >= MAX_SAMPLES);
-}
-
 #endif

@@ -6,12 +6,13 @@ uniform vec2 synth_Resolution;
 //#define g(a,b) Z(a,b)
 
 uniform sampler2D b0;
-uniform sampler2D b1;
-uniform sampler2D b2;
+uniform sampler2D noiseTex;
 uniform int	PASSINDEX;
-// #define d1 Xs[]=float[](.7,.4,.3,.7,.3,.4,.7,.1,.6,.3,.3,.6,.6,.5,.3,.7,0.2,.9,.1,.7,0.4,.3,.5,.6;.3,.7,.6,.4,.3,.3,.4,.7,.4,.3,.5,.3,.1,.5,.4,.2,.2,.5,.2,.7,.3,.5,.3,.6,.4,.3,.7,.6,.3,.3,.4,.7,.7,.1,.4,.6,.3,.6,.3,.4,.4,.3,.6,.3,.3,.3,.4,.6,.6,.2,.7,.2,.4,.5,.5,.7,.3,.3.6,.6,.3,.4,.6,.7,.1,.3,.4,.5,.0,.7,.2,.7,.4,.3,.7,.3,.0,.7,.2,.7);
-// #define d2 Ys[]=float[](.2,.8,.2,.7,1.,.0,.7,.2,.6,.6,.2,.4,1.,.0,.7,.2,0.2,.7,.5,.2,.0,1.,.6,.7,.3,.7,-.1,.1,1.,.1,.7,.3,.7,.5,.7,.2,.5,.7,.0,.2,1.,.1,.4,.7,.8,1.,.2,.2,.0,.6,.6,.2,.6,.1,.7,.2,.6,.6,.2,.6,.1,.4,.6,.0,.1,.4,.6,.0,.6,.1,.6,.5,.6,.5,.4,.1,1.,.1,.7,.7,.6,3,.3,.5,.6,.1,.5,.4,0.6,.1,.6,.3,1.,.3,.3,.6,.6,.3,.7,.0,.7,.6,.3,.2);
-// #define d3 sentences[]= int[](8,26,21,4,26,18,4,4,13,26,19,7,8,13,6,18,26,24,14,20,26,15,4,14,15,11,4,26,22,14,20,11,3,26,13,14,19,26,1,4,11,8,4,21,4,0,19,19,0,2,10,26,18,7,8,15,18,26,14,13,26,5,8,17,4,26,14,5,5,26,19,7,4,26,18,7,14,20,11,3,4,17,26,14,5,26,14,17,8,14,13,8,26,22,0,19,2,7,4,3,26,2,26,1,4,0,12,18,26,6,11,8,19,19,4,17,26,8,13,26,19,7,4,26,3,0,17,10,26,13,4,0,17,26,19,7,4,26,19,0,13,13,7,0,20,18,4,17,26,6,0,19,4);
+uniform float iTimeDelta;
+#define clear0 float Xs[104]=float[](.7,.4,.3,.7,.3,.4,.7,.1,.6,.3,.3,.6,.6,.5,.3,.7,0.2,.9,.1,.7,0.4,.3,.5,.6,.3,.7,.6,.4,.3,.3,.4,.7,.4,.3,.5,.3,.1,.5,.4,.2,.2,.5,.2,.7,.3,.5,.3,.6,.3,.2,.6,.5,.3,.3,.4,.7,.7,.1,.4,.6,.3,.6,.3,.4,.4,.3,.6,.3,.3,.3,.4,.6,.6,.2,.7,.2,.4,.5,.5,.7,.3,.3,.6,.6,.3,.4,.6,.7,.1,.3,.4,.5,.0,.7,.2,.7,.4,.3,.7,.3,.0,.7,.2,.7);
+#define clear1 float Ys[] = float[](.2,.8,.2,.7,1.,.0,.7,.2,.6,.6,.2,.4,1.,.0,.7,.2,.2,.7,.5,.2,.0,1.,.6,.7,.3,.7,.0,.1,1.,.1,.7,.3,.7,.5,.7,.2,.5,.7,.0,.2,1.,.1,.4,.7,.8,1.,.2,.2,.0,.6,.6,.2,.6,.1,.7,.2,.6,.6,.2,.6,.1,.4,.6,.0,.1,.4,.6,.0,.6,.1,.6,.5,.6,.5,.4,.1,1.,.1,.7,.7,.6,.3,.3,.5,.6,.1,.5,.4,.6,.1,.6,.3,1.,.3,.3,.6,.6,.3,.7,.0,.7,.6,.3,.2);
+#define clear2 int[] sentences = int[](8,26,21,4,26,18,4,4,13,26,19,7,8,13,6,18,26,24,14,20,26,15,4,14,15,11,4,26,22,14,20,11,3,26,13,14,19,26,1,4,11,8,4,21,4,0,19,19,0,2,10,26,18,7,8,15,18,26,14,13,26,5,8,17,4,26,14,5,5,26,19,7,4,26,18,7,14,20,11,3,4,17,26,14,5,26,14,17,8,14,13,8,26,22,0,19,2,7,4,3,26,2,26,1,4,0,12,18,26,6,11,8,19,19,4,17,26,8,13,
+#define clear3   26,19,7,4,26,3,0,17,10,26,13,4,0,17,26,19,7,4,26,19,0,13,13,7,0,20,18,4,17,26,6,0,19,4,0,11,11,26,19,7,14,18,4,26,12,14,12,4,13,19,18,26,22,8,11,11,26,1,4,26,11,14,18,19,26,8,13,26,19,8,12,4,11,8,10,4,26,19,4,0,17,18,26,8,13,26,17,0,8,13,26,19,8,12,4,26,19,14,26,2,14,14,10,8,4);
 // float d1;
 // float d2;
 // int d3;
@@ -58,7 +59,6 @@ float sentenceC = 30.; //C beam tanhauser 16.5
 float sentenceD = 45.; //All moment tears rain 27.
 float sentenceE = 60.; //time to die 41.
 
-float pixelSize;
 
 float intensityStart;
 float gTime;
@@ -104,34 +104,6 @@ float powerize(float f, float p)
     else
         return -(pow(abs(f),p));
 }
-
-//not used : looks like my hardware don't want me to use it inside for loops
-float QFilter(float v, float position, float power)
-{
-    v = clamp(v,-1.,1.);
-    v -= position;
-    v *= v;
-
-    return pow((1.0-v),power);
-}
-
-
-//not used, generate many sin, with higher intensity near the ideal freq
-float BandNoise(float freqband)
-{
-    float result = 0.;
-
-    float freqCount = 160.0;
-    for (float i=0.; i<freqCount; i++)
-    {
-        float stepf = (i/freqCount) + s((i)*0.0001)*0.253;
-        float volume = max(1.-10.*abs(stepf-freqband/5000.),0.0);//1.0-(i/120.0); // //QFilter(stepf,freqband/5000.0,20.0)
-        result += volume*sin(gTime*(stepf * 5000.0) * TAU);
-    }
-
-    return result * 0.5;
-}
-
 //generate *freqcount* sin around an ideal *freqband*
 float BandNoiseOpti(float freqband, float ltime)
 {
@@ -151,20 +123,18 @@ float BandNoiseOpti(float freqband, float ltime)
 //vowel, fundamental, 4 formant, bit of noise
 float Vowel(vec4 formants)
 {
-    float result = 0.;
 
-    float base;
 
     //kinda human voice
     //base = pow(fract(gfreq*1.0*offsetTime)*2.0-1.0,2.0);
     //base = pow(sin(gfreq*TAU*offsetTime)*2.0-1.0,2.0) * 0.05;
 
     ///machine voice
-    base = Sing(1.);
+    float base = Sing(1.);
     base = 0.3*base + base*Sing(0.5);
 
     //loat t = mod(offsetTime,1.0/gfreq);
-    result += base*0.4;
+    float result = base*0.4;
 
 
     result += dot(vec4(.2),base*FormantFilterV(formantFilterFactor)*(sin(gTime*(formants)*TAU)));
@@ -217,15 +187,8 @@ void V2(vec4 formants,float amount)
 
 float MakeSoundV()
 {
-    float result = 0.0;
-    float offsetTime = gTime + freqOffset;
-
-    float base = Sing(1.);
-    result += base*0.04;
-
-    result += result*s(gTime*0.1);
-
-    return result;
+    float result = Sing(1.)*0.04;
+    return result + result*s(gTime*0.1);
 }
 
 //nasal M consonant, no formants, only fundamental freq
@@ -236,39 +199,16 @@ float M()
 
 
 
-float MakeSoundP(float start)
-{
-    float result = 0.0;
-    float dur = 0.3;
-    float progress01 = (gTime-start)/dur;
-
-    if (progress01>0.0 && progress01<1.0)
-    {
-    	float vol = exp(-progress01*5.0);// * clamp(t*1000.0,0.0,1.0);
-    	float base = pow(fract(1.0*gfreq*gTime)*2.0-1.0,2.0);
-    	//base *= (sin(freq*TAU*gTime*exp(-1.8-progress01*2.0)));
-
-        result = base*vol;
-        result *= s(gTime*0.001)*clamp((1.0-progress01*10.0),0.,1.);
-    }
-
-    //float kick = sin(t*220.0* exp(-t* .75));
-
-
-    return result * .1;
-}
+// void MakeSoundP(float start)
+// {
+// 	N(T,4.0*t(start,start+0.005,start+0.04));
+// }
 
 
 void MakeSoundT(float start)
 {
 	N(T,4.0*t(start,start+0.005,start+0.04));
 }
-
-float inverseLerp(float start, float end, float value)
-{
-    return clamp((value - start) / (end - start), 0.0, 1.0);
-}
-
 float OffsetFreq(float start, float end)
 {
     return clamp(smoothstep(intensityStart+start,intensityStart+end,gTime),0.,1.);
@@ -285,7 +225,6 @@ float SynthLead(float _time, float end, float note)
 {
     float results = 0.;
     float count = 20.0;
-    float curNote = note;
 
     _time = max(0.,leadtime-_time);
     end = clamp((end-leadtime)*0.5,0.,1.);
@@ -296,47 +235,17 @@ float SynthLead(float _time, float end, float note)
         float volume = 0.2*pow((1.-progress),clamp(50.0/(_time*_time),5.,500.));
         results += volume * sin(((i+1.)*note)*leadtime*TAU);
     }
-
-    curNote = note;
-
-
-    float OOAmix = _time - atan(_time);
-
-    float _filter = pow(sin(note*TAU*leadtime)*0.5+0.5,10./(leadtime));
-    //_filter = 0.5*pow(sin(pow(2.0,note)*200.0*TAU*gTime + OOAmix*540.*TAU)*0.5+0.5,90./(gTime*gTime));
-    //_filter += 0.5*pow(sin(pow(2.0,note)*800.0*TAU*gTime + OOAmix*360.*TAU)*0.5+0.5,90./(gTime*gTime));
-    //_filter += 0.1*pow(sin(pow(2.0,note)*200.0*TAU*gTime +smooth(_time*_time)*900.)*0.5+0.5,90./(gTime*gTime));
-    //results *= mix(_filter,1.0,min(1.,gTime));
-    //results = _filter;
-    //results *= mix(_filter,1., min(_time*0.1,1.0));
     results = sin(results*min(_time,4.0));// + min(_time*0.1,1.0);
 
-    vec4 formnts = A*_time;// + (I-OO)*OOAmix;
 
-    //results = dot(vec4(.2),results*(sin((formnts)*TAU)));
-
-    //results *= min(1.0,(_time*0.5));
-
-    return results*0.5*end;// * (sin(gTime*20.0*TAU+sin(gTime)*10.0)*0.5+0.5);
+    return results*0.6*end;// * (sin(gTime*20.0*TAU+sin(gTime)*10.0)*0.5+0.5);
 }
 
 float Lead(float _time)
 {
-    float results = 0.0;
-    float freqmul = pow(2.0,floor(_time/30.0)*0.5-2.);
+    float freqmul = pow(2.0,floor(_time/30.0)*0.5-1.5);
     leadtime =  mod(_time,30.);
-
-    results += SynthLead(0.0,5.0,703.*freqmul);
-
-    results += SynthLead(6.,10.,740.*freqmul);
-
-    results += SynthLead(12.,16.,877.*freqmul);
-
-    results += SynthLead(14.,20.,823.*freqmul);
-
-    results += SynthLead(21.,26.,734.*freqmul);
-
-    return results;
+    return SynthLead(0.0,5.0,703.*freqmul)+SynthLead(6.,10.,740.*freqmul)+SynthLead(12.,16.,877.*freqmul)+SynthLead(14.,20.,823.*freqmul)+SynthLead(21.,26.,734.*freqmul);
 }
 
 float Bass(float _time)
@@ -359,402 +268,326 @@ float Speech(float _time)
     gTime = _time;
     //
 
-    if (true)
-    {
 
-        intensityStart = sentenceA;
 
-        //i've
-        freqOffset -= 0.02*OffsetFreq(0.1,0.8);
+    float mixAO;
 
+    intensityStart = sentenceA;
 
-        freqOffset += 0.03*OffsetFreq(1.8,2.6);
-        freqOffset -= 0.03*OffsetFreq(1.5,3.0);
 
-        //people
-        intensityStart += 4.4;
-        freqOffset += 0.01*OffsetFreq(0.0,0.5);
+    //i've
+    //intensityStart += 0.0;
+    mixAO = (gTime-intensityStart)*1.1;
+    V(magicMix(A,I,mixAO-0.3),t(0.0,0.4));
+    voiceOutput += MakeSoundV() * t(0.3,0.6);
 
+    //seen
+    intensityStart += 1.8;
+    N(S,t(0.,0.2));
+    V(I,t(0.2,0.4));
+    voiceOutput += M() * t(0.4,0.6);
+
+    //things
+    intensityStart += 0.8;
+    N(F,t(0.0,0.2));
+    V(I,t(0.15,0.2,0.4,0.5));
+    voiceOutput += M() * t(0.4,0.5);
+    N(S,t(0.6,0.7));
 
-        //not be
-        intensityStart += 2.1;
-        freqOffset -= 0.02*OffsetFreq(0.0,1.5);
+    //you
+    intensityStart += 1.3;
+    V(I,t(0.0,0.20,0.4));
+    V2(OO,t(0.2,0.4,0.5));
 
-        //lieve
-        intensityStart += 1.;
-        freqOffset -= 0.02*OffsetFreq(0.0,0.7);
+    //people
+    intensityStart += 0.5;
+    // MakeSoundP(intensityStart+0.24);
+    V(I,t(0.26,0.27,0.42,0.48));
+    // MakeSoundP(intensityStart+0.48);
 
+    formantFilterValue -= t(0.6,0.8,0.9,0.91) * 0.8;
 
+    V(magicMix(O,E,gTime-(intensityStart+0.7)),t(0.5,0.52,0.7,0.9));
 
-        intensityStart = sentenceB;
-        //tack
-        //intensityStart = 9.5;
-        freqOffset += 0.7*OffsetFreq(0.0,2.0);
+    //would
+    intensityStart += 2.1;
+    formantFilterValue -= t(0.2,0.4);
+    V(OO,t(0.1,0.4));
 
-        //ships
-        intensityStart += 0.4;
-        freqOffset -= 0.1*OffsetFreq(0.0,0.5);
+    //not
+    V(O,t(0.4,0.45,0.5,0.6));
 
-        //shoulder
-        intensityStart += 3.2;
-        freqOffset += 0.06*OffsetFreq(0.0,0.5);
+    //believe
+    intensityStart += 0.6;
+    // MakeSoundP(intensityStart+0.1);
+    formantFilterValue -= t(0.0,0.01,0.1,0.11);
+    formantFilterValue -= t(0.24,0.3,0.31,0.34);
+    V(I,t(0.0,0.5));
+    voiceOutput += MakeSoundV() * t(0.4,0.6,0.8);
 
-        //orion
-        intensityStart += 1.1;
-        freqOffset -= 0.1*OffsetFreq(0.0,1.8);
+
 
 
-        //
-        //
-        //intensityStart = 16.0;
-        //freqOffset += 0.2*OffsetFreq(0.0,7.0);
 
-        intensityStart = sentenceC;
-        //i
-        intensityStart -= 0.2;
-        freqOffset += 0.2*OffsetFreq(0.0,0.8);
+    intensityStart = sentenceB;
+
+    //attack
+    intensityStart += 0.0;
+    V(magicMix(E,A,0.7+gTime-intensityStart),t(0.00,0.05,0.05,0.11));
+    V(magicMix(E,A,0.7+gTime-intensityStart),t(0.18,0.19,0.4,0.42));
+    intensityStart += 0.03;
+    N(I,t(0.175,0.18,0.18,0.19));
+    N(I,t(0.46,0.461,0.465,0.55));
 
-        //c beam
-        intensityStart += 1.5;
-        freqOffset += 0.2*OffsetFreq(0.0,0.5);
+    //ships
+    intensityStart += 0.4;
+    N(SH,t(0.2,0.25,0.3,0.35));
+    V(I,t(0.25,0.35,0.40,0.45));
+    // MakeSoundP(intensityStart+0.5);
+    N(S,t(0.55,0.60,0.62,0.7));
+
+    //on
+    intensityStart += 1.0;
+    formantFilterValue -= t(0.1,0.2,0.39,0.41) * 0.99;
+    V(mix(O,A,0.3),t(0.0,0.1,0.3,0.4));
+
+
+    //fire
+    intensityStart += 0.3;
+    N(F,t(0.1,0.2,0.25,0.3));
+    V(A,t(0.25,0.3,0.4,0.5));
+    V(I,0.3*t(0.4,0.5));
+    V2(magicMix(E,A,(gTime-intensityStart-0.4)*1.3),t(0.4,0.5,0.6,0.8));
+
+    //off
+    intensityStart += 1.1;
+    V(mix(O,A,0.3),t(0.01,0.1,0.2,0.28));
+    N(F,t(0.2,0.25,0.25,0.4));
+
+    //the
+    intensityStart += 0.5;
+    MakeSoundT(0.05);
+    V(E,t(0.05,0.1,0.2,0.3));
+
+    //Shoulder
+    intensityStart += 0.2;
+    N(SH,t(0.0,0.1));
+    V(OO,t(0.05,0.15,0.22,0.3));
+    V2(magicMix(E,A,(gTime-intensityStart-0.4)*1.2),t(0.35,0.4,0.6,0.8));
+    //silence += t(0.32,0.33,0.35,0.38);
+    MakeSoundT(0.34);
+
+    //of
+    intensityStart += 1.2;
+    V(mix(O,A,0.3),t(0.01,0.1,0.15,0.25));
+    N(F,t(0.15,0.25,0.25,0.3));
+
+    //Orion
+    intensityStart += 0.3;
+    formantFilterValue -= t(0.45,0.7,0.9,1.0);
+    mixAO = (gTime-intensityStart)*3.3;
+    V(magicMix(O,A,mixAO*0.4),t(0.01,0.1,0.4,0.6));
+    mixAO = min(1.0,(mixAO-1.0));
+    V2(magicMix(I,E,mixAO*0.6),t(0.4,0.6,0.7,0.8));
+
+
+
+
+
+    intensityStart = sentenceC;
+
+    //i
+    V(magicMix(A,I,(gTime-intensityStart-0.3)*1.0),t(0.0,0.2,0.3,0.4));
+    //V(A,t(0.0,0.2,0.4);
+    //V(I,t(0.2,0.4,0.5);
+
+    //watched
+    intensityStart += 0.3;
+    V(magicMix(OO,O,(gTime-intensityStart-0.2)*0.5),t(0.1,0.2,0.4,0.5));
+    MakeSoundT(0.5);
+    N(SH,t(0.5,0.6));
+    N(E,t(0.6,0.61,0.63));
+    //N(E,t(0.6,0.7);
+
+    //c beam
+    intensityStart += 1.2;
+    N(C,t(0.0,0.2,0.3));
+
+    // MakeSoundP(intensityStart+0.3);
+    formantFilterValue -= t(0.24,0.3,0.31,0.34);
+    formantFilterValue -= t(0.4,0.6,0.6,0.7);
+    V(I,t(0.1,0.5));
+    V2(S,t(0.5,0.7));
+
+    //glitter
+    intensityStart += 0.7;
+    N(I,t(0.0,0.005,0.009,0.01));
+    V(I,t(0.05,0.2));
+    MakeSoundT(0.3);
+    V(magicMix(E,A,(gTime-intensityStart-0.4)*1.2),t(0.3,0.6));
+
+    //in
+    intensityStart += 1.4;
+    formantFilterValue -= t(0.0,0.3,0.31);
+    V(I,t(0.0,0.3));
+
+
+    //the
+    intensityStart += 0.2;
+    //MakeSoundT(0.05);
+    V(E,t(0.05,0.1,0.2,0.3));
+
+    //dark
+    intensityStart += 0.2;
+    //MakeSoundT(0.05);
+    V(magicMix(A,R,(gTime-intensityStart-0.1)*1.5),t(0.05,0.1,0.3,0.4));
+    N(E,t(0.46,0.461,0.47,0.49));
+
+    //near
+    intensityStart += 0.9;
+    formantFilterValue -= t(0.0,0.01,0.15,0.21)*0.9;
+    V(magicMix(AE,A,(gTime-intensityStart-0.2)*.6),t(0.0,0.2,0.4,0.5));
+
+    //the
+    intensityStart += 0.4;
+    MakeSoundT(0.05);
+    V(E,t(0.05,0.1,0.2,0.3));
+
+    //tannhauser
+    intensityStart += 0.3;
+    MakeSoundT(0.05);
+    formantFilterValue -= t(0.18,0.2,0.3,0.31)*0.8;
+    V(AE,t(0.05,0.1,0.2,0.3));
+    N(O,t(0.2,0.3,0.3,0.4));
+    V2(O,t(0.3,0.4,0.4,0.5));
+    V(S,t(0.4,0.5,0.5,0.6));
+    V2(magicMix(E,A,(gTime-intensityStart-0.5)*1.2),t(0.5,0.6,0.6,0.8));
+
+    //gate
+    intensityStart += 0.7;
+    N(E,t(0.0,0.01,0.07));
+    V(magicMix(AE,I,(gTime-intensityStart)*1.4),t(0.0,0.2,0.4));
+    MakeSoundT(0.4);
+
+
+
+    intensityStart = sentenceD;
+
+    //All
+    formantFilterValue -= t(0.0,0.6,0.61)*0.8;
+    V(O,t(0.0,0.01,0.4,0.6));
+
+    //those
+    intensityStart += 1.0;
+    V(S,t(0.0,0.2,0.3));
+    V2(O,t(0.2,0.4));
+    V(S,t(0.4,0.5,0.6));
+
+    //moments
+    intensityStart += 1.0;
+    voiceOutput += M() * t(0.0,0.8);
+    V(O,t(0.2,0.25,0.4,0.5));
+    V2(E,t(0.5,0.55,0.7,0.8));
+    MakeSoundT(0.9);
+    V(S,t(0.9,1.0,1.1));
+
+   	//will
+    intensityStart += 2.0;
+    formantFilterValue -= t(0.3,0.5,0.51);
+    V(magicMix(OO,I,(gTime-intensityStart)*0.9+0.6),t(0.1,0.2,0.4,0.5));
+
+    //be
+    intensityStart += 0.4;
+    V(I,t(0.0,0.05,0.2,0.3));
+
+    //lost
+    intensityStart += 0.2;
+    V(mix(O,E,0.3),t(0.0,0.3));
+    V2(S,t(0.3,0.4));
+    MakeSoundT(0.5);
+
+    //in
+    intensityStart += 1.6;
+    formantFilterValue -= t(0.0,0.3,0.31);
+    V(I,t(0.0,0.3));
+
+    //time
+    intensityStart += 0.3;
+    MakeSoundT(0.0);
+    V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.2,0.45));
+    voiceOutput += M() * t(0.2,0.5,0.55);
+    N(mix(A,E,0.7),t(0.5,0.55,0.65)*0.3);
+
+
+    //like
+    intensityStart += 1.5;
+    V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.3,0.35));
+    N(I,2.0*t(0.36,0.361,0.361,0.5));
+
+
+    //tears
+    intensityStart += 2.;
+    MakeSoundT(0.0);
+    V(magicMix(I,R2,max(0.,(gTime-intensityStart+0.2)*.6)),t(0.0,0.2,0.4,0.5));
+    V2(S,t(0.4,0.5,0.5,0.6));
+
+
+    //in
+    intensityStart += 1.;
+    formantFilterValue -= t(0.0,0.4,0.41);
+    V(I,t(0.0,0.3));
+
+    //the
+    intensityStart += 0.4;
+    //MakeSoundT(0.);
+    V(E,t(0.,0.05,0.2));
+
+    //rain
+    intensityStart += 0.25;
+    formantFilterValue -= t(0.3,0.7,0.71);
+    V(magicMix(R2,AE,(gTime-intensityStart+1.9)*0.5),t(0.0,0.1,0.4));
+    V2(magicMix(AE,I,(gTime-intensityStart-0.0)*1.3),t(0.1,0.4,0.5,0.6));
+    voiceOutput += M() * t(0.5,0.6,0.8);
+
+
+    intensityStart = sentenceE;
+    //time
+    intensityStart += 0.0;
+    MakeSoundT(0.0);
+    V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.2,0.45));
+    voiceOutput += M() * t(0.2,0.5,0.55);
+    N(mix(A,E,0.7),t(0.5,0.55,0.65)*0.3);
+
+    //to
+    intensityStart += 1.5;
+    MakeSoundT(0.0);
+    V(OO,t(0.0,0.2));
+    //N(OO,t(0.05,0.1,0.2,0.3));
+
+    //die
+    //intensityStart += 0.5;
+    //formantFilterValue -= t(0.0,0.01,0.1,0.101);
+    //MakeSoundT(0.05);
+    //V(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2)),t(0.0,0.1,0.7));
+    //N(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2)),t(0.0,0.1,0.4,0.8));
+    //N(A,t(0.0,0.5,0.9)*0.6);
+
+    //cookie ?
+    intensityStart += 0.6;
+    N(I,2.*t(0.0,0.001,0.02,0.03));
+    V(OO,t(0.0,0.3));
+    N(I,2.*t(0.3,0.301,0.31,0.33));
+    V(I,t(0.3,0.5));
+
+
+    //die
+    //intensityStart = 40.4;
+    //voiceOutput += M() * t(0.0,0.05,0.1);
+    //MakeSoundT(0.02);
+    //V(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2))) * t(0.0,0.05,0.4,0.7);
+    //N(mix(A,E,0.9),t(0.2,0.35,0.45)*0.6);
 
-        //glitter
-        intensityStart += 0.7;
-        freqOffset -= 0.05*OffsetFreq(0.0,0.5);
 
-
-        //in the dark
-        intensityStart += 1.2;
-        freqOffset += 0.2*OffsetFreq(0.0,1.0);
-
-
-        //tannhauser gate
-        intensityStart += 2.3;
-        freqOffset -= 0.1*OffsetFreq(0.0,1.5);
-
-
-    }
-
-    if (true)
-    {
-        float mixAO;
-
-        intensityStart = sentenceA;
-
-
-        //i've
-        //intensityStart += 0.0;
-        mixAO = (gTime-intensityStart)*1.1;
-        V(magicMix(A,I,mixAO-0.3),t(0.0,0.4));
-        voiceOutput += MakeSoundV() * t(0.3,0.6);
-
-        //seen
-        intensityStart += 1.8;
-        N(S,t(0.,0.2));
-        V(I,t(0.2,0.4));
-        voiceOutput += M() * t(0.4,0.6);
-
-        //things
-        intensityStart += 0.8;
-        N(F,t(0.0,0.2));
-        V(I,t(0.15,0.2,0.4,0.5));
-        voiceOutput += M() * t(0.4,0.5);
-        N(S,t(0.6,0.7));
-
-        //you
-        intensityStart += 1.3;
-        V(I,t(0.0,0.20,0.4));
-        V2(OO,t(0.2,0.4,0.5));
-
-        //people
-        intensityStart += 0.5;
-        voiceOutput += MakeSoundP(intensityStart+0.24);
-        V(I,t(0.26,0.27,0.42,0.48));
-        voiceOutput += MakeSoundP(intensityStart+0.48);
-
-        formantFilterValue -= t(0.6,0.8,0.9,0.91) * 0.8;
-
-        V(magicMix(O,E,gTime-(intensityStart+0.7)),t(0.5,0.52,0.7,0.9));
-
-        //would
-        intensityStart += 2.1;
-        formantFilterValue -= t(0.2,0.4);
-        V(OO,t(0.1,0.4));
-
-        //not
-        V(O,t(0.4,0.45,0.5,0.6));
-
-        //believe
-        intensityStart += 0.6;
-        voiceOutput += 0.5*MakeSoundP(intensityStart+0.1);
-        formantFilterValue -= t(0.0,0.01,0.1,0.11);
-        formantFilterValue -= t(0.24,0.3,0.31,0.34);
-        V(I,t(0.0,0.5));
-        voiceOutput += MakeSoundV() * t(0.4,0.6,0.8);
-
-
-
-
-
-        intensityStart = sentenceB;
-
-        //attack
-        intensityStart += 0.0;
-        V(magicMix(E,A,0.7+gTime-intensityStart),t(0.00,0.05,0.05,0.11));
-        V(magicMix(E,A,0.7+gTime-intensityStart),t(0.18,0.19,0.4,0.42));
-        intensityStart += 0.03;
-        N(I,t(0.175,0.18,0.18,0.19));
-        N(I,t(0.46,0.461,0.465,0.55));
-
-        //ships
-        intensityStart += 0.4;
-        N(SH,t(0.2,0.25,0.3,0.35));
-        V(I,t(0.25,0.35,0.40,0.45));
-        voiceOutput += MakeSoundP(intensityStart+0.5);
-        N(S,t(0.55,0.60,0.62,0.7));
-
-        //on
-        intensityStart += 1.0;
-        formantFilterValue -= t(0.1,0.2,0.39,0.41) * 0.99;
-        V(mix(O,A,0.3),t(0.0,0.1,0.3,0.4));
-
-
-        //fire
-        intensityStart += 0.3;
-        N(F,t(0.1,0.2,0.25,0.3));
-        V(A,t(0.25,0.3,0.4,0.5));
-        V(I,0.3*t(0.4,0.5));
-        V2(magicMix(E,A,(gTime-intensityStart-0.4)*1.3),t(0.4,0.5,0.6,0.8));
-
-        //off
-        intensityStart += 1.1;
-        V(mix(O,A,0.3),t(0.01,0.1,0.2,0.28));
-        N(F,t(0.2,0.25,0.25,0.4));
-
-        //the
-        intensityStart += 0.5;
-        MakeSoundT(0.05);
-        V(E,t(0.05,0.1,0.2,0.3));
-
-        //Shoulder
-        intensityStart += 0.2;
-        N(SH,t(0.0,0.1));
-        V(OO,t(0.05,0.15,0.22,0.3));
-        V2(magicMix(E,A,(gTime-intensityStart-0.4)*1.2),t(0.35,0.4,0.6,0.8));
-        //silence += t(0.32,0.33,0.35,0.38);
-        MakeSoundT(0.34);
-
-        //of
-        intensityStart += 1.2;
-        V(mix(O,A,0.3),t(0.01,0.1,0.15,0.25));
-        N(F,t(0.15,0.25,0.25,0.3));
-
-        //Orion
-        intensityStart += 0.3;
-        formantFilterValue -= t(0.45,0.7,0.9,1.0);
-        mixAO = (gTime-intensityStart)*3.3;
-        V(magicMix(O,A,mixAO*0.4),t(0.01,0.1,0.4,0.6));
-        mixAO = min(1.0,(mixAO-1.0));
-        V2(magicMix(I,E,mixAO*0.6),t(0.4,0.6,0.7,0.8));
-
-
-
-
-
-        intensityStart = sentenceC;
-
-        //i
-        V(magicMix(A,I,(gTime-intensityStart-0.3)*1.0),t(0.0,0.2,0.3,0.4));
-        //V(A,t(0.0,0.2,0.4);
-        //V(I,t(0.2,0.4,0.5);
-
-        //watched
-        intensityStart += 0.3;
-        V(magicMix(OO,O,(gTime-intensityStart-0.2)*0.5),t(0.1,0.2,0.4,0.5));
-        MakeSoundT(0.5);
-        N(SH,t(0.5,0.6));
-        N(E,t(0.6,0.61,0.63));
-        //N(E,t(0.6,0.7);
-
-        //c beam
-        intensityStart += 1.2;
-        N(C,t(0.0,0.2,0.3));
-
-        voiceOutput += 0.5*MakeSoundP(intensityStart+0.3);
-        formantFilterValue -= t(0.24,0.3,0.31,0.34);
-        formantFilterValue -= t(0.4,0.6,0.6,0.7);
-        V(I,t(0.1,0.5));
-        V2(S,t(0.5,0.7));
-
-        //glitter
-        intensityStart += 0.7;
-        N(I,t(0.0,0.005,0.009,0.01));
-        V(I,t(0.05,0.2));
-        MakeSoundT(0.3);
-        V(magicMix(E,A,(gTime-intensityStart-0.4)*1.2),t(0.3,0.6));
-
-        //in
-        intensityStart += 1.4;
-        formantFilterValue -= t(0.0,0.3,0.31);
-        V(I,t(0.0,0.3));
-
-
-        //the
-        intensityStart += 0.2;
-        //MakeSoundT(0.05);
-        V(E,t(0.05,0.1,0.2,0.3));
-
-        //dark
-        intensityStart += 0.2;
-        //MakeSoundT(0.05);
-        V(magicMix(A,R,(gTime-intensityStart-0.1)*1.5),t(0.05,0.1,0.3,0.4));
-        N(E,t(0.46,0.461,0.47,0.49));
-
-        //near
-        intensityStart += 0.9;
-        formantFilterValue -= t(0.0,0.01,0.15,0.21)*0.9;
-        V(magicMix(AE,A,(gTime-intensityStart-0.2)*.6),t(0.0,0.2,0.4,0.5));
-
-        //the
-        intensityStart += 0.4;
-        MakeSoundT(0.05);
-        V(E,t(0.05,0.1,0.2,0.3));
-
-        //tannhauser
-        intensityStart += 0.3;
-        MakeSoundT(0.05);
-        formantFilterValue -= t(0.18,0.2,0.3,0.31)*0.8;
-        V(AE,t(0.05,0.1,0.2,0.3));
-        N(O,t(0.2,0.3,0.3,0.4));
-        V2(O,t(0.3,0.4,0.4,0.5));
-        V(S,t(0.4,0.5,0.5,0.6));
-        V2(magicMix(E,A,(gTime-intensityStart-0.5)*1.2),t(0.5,0.6,0.6,0.8));
-
-        //gate
-        intensityStart += 0.7;
-        N(E,t(0.0,0.01,0.07));
-        V(magicMix(AE,I,(gTime-intensityStart)*1.4),t(0.0,0.2,0.4));
-        MakeSoundT(0.4);
-
-
-
-        intensityStart = sentenceD;
-
-        //All
-        formantFilterValue -= t(0.0,0.6,0.61)*0.8;
-        V(O,t(0.0,0.01,0.4,0.6));
-
-        //those
-        intensityStart += 1.0;
-        V(S,t(0.0,0.2,0.3));
-        V2(O,t(0.2,0.4));
-        V(S,t(0.4,0.5,0.6));
-
-        //moments
-        intensityStart += 1.0;
-        voiceOutput += M() * t(0.0,0.8);
-        V(O,t(0.2,0.25,0.4,0.5));
-        V2(E,t(0.5,0.55,0.7,0.8));
-        MakeSoundT(0.9);
-        V(S,t(0.9,1.0,1.1));
-
-       	//will
-        intensityStart += 2.0;
-        formantFilterValue -= t(0.3,0.5,0.51);
-        V(magicMix(OO,I,(gTime-intensityStart)*0.9+0.6),t(0.1,0.2,0.4,0.5));
-
-        //be
-        intensityStart += 0.4;
-        V(I,t(0.0,0.05,0.2,0.3));
-
-        //lost
-        intensityStart += 0.2;
-        V(mix(O,E,0.3),t(0.0,0.3));
-        V2(S,t(0.3,0.4));
-        MakeSoundT(0.5);
-
-        //in
-        intensityStart += 1.6;
-        formantFilterValue -= t(0.0,0.3,0.31);
-        V(I,t(0.0,0.3));
-
-        //time
-        intensityStart += 0.3;
-        MakeSoundT(0.0);
-        V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.2,0.45));
-        voiceOutput += M() * t(0.2,0.5,0.55);
-        N(mix(A,E,0.7),t(0.5,0.55,0.65)*0.3);
-
-
-        //like
-        intensityStart += 1.5;
-        V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.3,0.35));
-        N(I,2.0*t(0.36,0.361,0.361,0.5));
-
-
-        //tears
-        intensityStart += 2.;
-        MakeSoundT(0.0);
-        V(magicMix(I,R2,max(0.,(gTime-intensityStart+0.2)*.6)),t(0.0,0.2,0.4,0.5));
-        V2(S,t(0.4,0.5,0.5,0.6));
-
-
-        //in
-        intensityStart += 1.;
-        formantFilterValue -= t(0.0,0.4,0.41);
-        V(I,t(0.0,0.3));
-
-        //the
-        intensityStart += 0.4;
-        //MakeSoundT(0.);
-        V(E,t(0.,0.05,0.2));
-
-        //rain
-        intensityStart += 0.25;
-        formantFilterValue -= t(0.3,0.7,0.71);
-        V(magicMix(R2,AE,(gTime-intensityStart+1.9)*0.5),t(0.0,0.1,0.4));
-        V2(magicMix(AE,I,(gTime-intensityStart-0.0)*1.3),t(0.1,0.4,0.5,0.6));
-        voiceOutput += M() * t(0.5,0.6,0.8);
-
-
-        intensityStart = sentenceE;
-        //time
-        intensityStart += 0.0;
-        MakeSoundT(0.0);
-        V(magicMix(A,I,(gTime-intensityStart-0.2)*0.8),t(0.0,0.1,0.2,0.45));
-        voiceOutput += M() * t(0.2,0.5,0.55);
-        N(mix(A,E,0.7),t(0.5,0.55,0.65)*0.3);
-
-        //to
-        intensityStart += 1.5;
-        MakeSoundT(0.0);
-        V(OO,t(0.0,0.2));
-        //N(OO,t(0.05,0.1,0.2,0.3));
-
-        //die
-        intensityStart += 0.5;
-        formantFilterValue -= t(0.0,0.01,0.1,0.101);
-        MakeSoundT(0.05);
-        V(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2)),t(0.0,0.1,0.7));
-        N(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2)),t(0.0,0.1,0.4,0.8));
-        //N(A,t(0.0,0.5,0.9)*0.6);
-
-        //die
-        //intensityStart = 40.4;
-        //voiceOutput += M() * t(0.0,0.05,0.1);
-        //MakeSoundT(0.02);
-        //V(magicMix(A,I,max(0.,(gTime-intensityStart-0.1)*1.2))) * t(0.0,0.05,0.4,0.7);
-        //N(mix(A,E,0.9),t(0.2,0.35,0.45)*0.6);
-
-
-    }
-    else
-    {
-        //voiceOutput += 5.0*MakeSoundV(freq) * t(0.0,0.1,0.6,0.7);
-    	//voiceOutput += MakeSoundS(freq);
-    	//voiceOutput += F(S);
-        //voiceOutput += BandNoise(1000.0);
-    }
 
     voiceOutput += Noise(currentNoiseFormants) * currentNoiseAmount;
     voiceOutput += Vowel(currentVowelFormants) * currentVowelAmount;
@@ -807,7 +640,7 @@ vec2 SoundMain( float _time )
 
     float animate = sin(gTime*0.5-1.0)*2.0+2.5;
     //sOutput += (animate+0.5)*0.2*vec2(powerize(vroo,animate),powerize(vroo,animate));
-    sOutput += 0.1*music;
+    sOutput += 0.1*music*(clamp((74.-_time)*0.3,0.,1.));
 
     //_time = _time - 0.2;
     //gTime = _time;
@@ -818,6 +651,177 @@ vec2 SoundMain( float _time )
     return sOutput;
 }
 
+
+float DrawChar(int char, vec2 pos, float fkd)
+{
+    float results;
+    char *= 4;
+
+    for (float i=0.; i<50.; i++)
+    {
+        float progress = 3.*i/50.0+0.5;
+        float lineProgress = fract(progress);
+        int a=char+max(0,int(progress)-1),
+            b=char+int(progress),
+            c=char+min(3,int(progress)+1);
+
+        vec2 iStart = mix(vec2(Xs[a],Ys[a]),vec2(Xs[b],Ys[b]),0.5*lineProgress+0.5+fkd);
+        vec2 iEnd =   mix(vec2(Xs[b],Ys[b]),vec2(Xs[c],Ys[c]),lineProgress*0.5+fkd);
+        vec2 charPos = mix(iStart,iEnd,lineProgress+fkd);
+
+        //float thick = textThick * min(length(charPos-lastPoint),0.01);
+        //float thick = 0.01+0.01*textThick * abs(dot(normalize(charPos-lastPoint),vec2(0.7,0.7))); caligraphy
+        float val = length(pos-charPos)*25.0;
+        if (val<1.)
+        {
+        	results += val*10.-2.;
+        }
+
+    }
+
+    return results;
+}
+
+float DisplaySentence(int start, int end, vec2 charPo, float fkd)
+{
+    float char;
+
+    for (int i=start; i<end; i++)
+    {
+        if (sentences[i] != 26 && length(charPo-vec2(.5)) < 0.6)
+            char += DrawChar(sentences[i],charPo,fkd);
+        charPo.x -= 0.4;
+    }
+
+    return char;
+}
+
+vec2 rot(vec2 uv,float a){
+	return vec2(uv.x*cos(a)-uv.y*sin(a),uv.y*cos(a)+uv.x*sin(a));
+}
+
+float GiveMeArt(vec2 uvin)
+{
+	vec2 uv=synth_Resolution.xy;
+    uv=-.5*(uv-2.0*uvin.xy)/uv.x;
+	uv.y-=0.05;
+	uv*=3.0;
+    float slowT = gTime * 0.225;
+	//global rotation and zoom
+	uv*=sin(slowT)*0.5+1.5;
+
+	//mirror, rotate and scale 6 times...
+	float s=0.3;
+	for(int i=0;i<8;i++){
+		uv=abs(uv)-s;
+		uv=rot(uv,slowT);
+		s=s/(pow(sin(slowT*0.2)*0.5+0.5,2.0)*2.5);
+	}
+    float c = (1.-abs(uv.x));
+    c = pow(max(0.,c),400.0)*iTimeDelta*6.0;
+    return c;
+}
+
+vec4 Image(vec2 fragCoord)
+{
+
+    // Normalized pixel coordinates (from 0 to 1)
+    float ratio = synth_Resolution.x/synth_Resolution.y;
+    vec2 uv = fragCoord/synth_Resolution.y;
+    vec2 uv2 = fragCoord/synth_Resolution.xy;
+
+
+    gTime = time*0.9;
+    vec2 charPo = vec2(uv*12.0);
+    charPo.y -= 0.5;
+    float char = 0.0;
+    float intensityText = 0.0;
+
+    if (charPo.y < 2.0)
+    {
+            intensityStart = sentenceA;
+            intensityText = t(-2.,1.,9.,11.);
+            if (intensityText > 0.)
+            {
+                charPo.x -= .7 * ratio;
+                char += DisplaySentence(0,45,charPo,(1.-intensityText)*2.);
+            }
+            intensityStart = sentenceB;
+            intensityText = t(-2.,0.,7.,9.);
+
+            if (intensityText > 0.)
+            {
+                charPo.x -= .7 * ratio;
+                char += DisplaySentence(45,91,charPo,(1.-intensityText)*2.);
+            }
+            intensityStart = sentenceC;
+            intensityText = t(-2.,0.,9.,11.);
+
+            if (intensityText > 0.)
+            {
+                charPo.x -= 3.5 * ratio;
+                char += DisplaySentence(129,153,charPo,(1.-intensityText)*2.);
+
+
+                charPo.x += 2. * ratio;
+                charPo.y -= .5 * ratio;
+                char += DisplaySentence(91,129,charPo,(1.-intensityText)*2.);;
+            }
+            intensityStart = sentenceD;
+            intensityText = t(-2.,1.,13.,15.);
+
+            if (intensityText > 0.)
+            {
+                charPo.x -= 1.5 * ratio;
+                charPo.y -= .5 * ratio;
+                char += DisplaySentence(153,191,charPo,(1.-intensityText)*2.);
+            }
+
+            intensityText = t(6.,8.,13.,15.);
+
+            if (intensityText > 0.)
+            {
+                charPo.x -= 2.2 * ratio;
+                charPo.y += 0.6* ratio;
+                char += DisplaySentence(191,210,charPo,(1.-intensityText)*2.);
+            }
+            intensityStart = sentenceE;
+            intensityText = t(-1.,1.,4.,6.);
+
+            if (intensityText > 0.)
+            {
+                charPo *= 0.8;
+                charPo.x -= 3. * ratio;
+                charPo.y -= 0.1* ratio;
+                char += DisplaySentence(210,224,charPo,(1.-intensityText)*2.);
+            }
+    }
+
+    //char = min(1.,char) * (1.-2.0*abs(0.5-uv2.x));
+
+    vec2 filteredUV;
+    vec2 fuv;
+    vec4 smoke;
+
+    uv *= 0.4;
+    //noise
+    for (float i=0.; i<5.; i+=1.)
+    {
+        uv -= time*0.01;
+        filteredUV = (uv/(pow(2.,i))) * 256. + 0.5;
+        fuv = fract(filteredUV);
+        filteredUV = floor(filteredUV) + fuv*fuv*(3.0-2.0*fuv);
+        smoke += texture(noiseTex,(filteredUV-0.5) / 256.0 ) * (1.0+i) * 0.06;
+    }
+
+    vec2 dir = (smoke.xy) * 2. - 1.;
+    float light = dot(dir,vec2(.7,.7));
+    vec3 smokeColor = clamp(texture(b0,uv2 + 0.3*smoke.z*dir*iTimeDelta).rgb,0.0,1.0);
+
+    smokeColor *= mix(vec3(1.),mix(vec3(1.08,1.05,.95),vec3(.9,.9,1.05),smoke.w),iTimeDelta*30.)*(1.-iTimeDelta*2.0);
+    smokeColor = min(smokeColor,.6);
+    return vec4(smokeColor+vec3(char*iTimeDelta)+clamp(GiveMeArt(fragCoord),0.,1.),1.0);
+}
 
 void main() {
     vec2 uv = gl_FragCoord.xy / synth_Resolution;
@@ -832,31 +836,7 @@ void main() {
     }
     if (PASSINDEX == 0)
     {
-      gl_FragColor = vec4(1,.5,.1,1); //red
-    }
-    if (PASSINDEX == 1)
-    {
-      gl_FragColor = vec4(.1,.5,1,1); //blue
-    }
-    if (PASSINDEX == 2)
-    {
-      //rotate uvs
-      vec2 uv2 = (uv.x-.5)*(vec2(cos(time),sin(time)));
-      uv2 += (uv.y-.5)*(vec2(sin(time),-cos(time)));
-
-      //sample backbuffer
-      gl_FragColor = texture2D(b2, uv + (uv-0.5)*0.001 + sin(uv + vec2(time,0.9*time))*0.001);
-
-      //factor buf 1 & 2 factors
-      float reveal = (sin(time*50.5)) * 0.005;
-
-      if (abs(uv2.y) > 0.3)
-      {
-        if (mod(uv2.x,0.1) < .05)
-          gl_FragColor += texture2D(b0, uv)*reveal;
-        else
-          gl_FragColor += texture2D(b1, uv)*reveal;
-      }
+      gl_FragColor = Image(gl_FragCoord.xy);
     }
 }
 

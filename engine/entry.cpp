@@ -10,12 +10,14 @@
 #include <iostream>
 #endif
 #include "shader_min.h"
+#include <math.h>
+
+#define NOISETEXSIZE 256
 
 void audioStart();
 float audioGetTime();
-bool audioIsFinished();
-void captureFrame();
 HWND hwnd;
+float noiseTexData[NOISETEXSIZE*NOISETEXSIZE*4];
 
 #ifdef DEBUG
 void APIENTRY
@@ -159,23 +161,27 @@ void main()
 #ifdef BUFFERS
   //As we use 2 textures for each buffer for each buffer, "swapped" will tell which texture to render, changes at each frame
   //dualbuffering prevents reading and writing to the same render target
-<<<<<<< Updated upstream
 	bool swapped = false;
-=======
-	bool swapped = false; //initilization costs 13 byte :(
->>>>>>> Stashed changes
 
   //Here we create textures, you can change the size of textures, filtering, add mipmaps, to suit your need
-	GLuint textureID[BUFFERS*2];
-  glGenTextures(BUFFERS*2,textureID);
+	GLuint textureID[BUFFERS*2+1];
+  glGenTextures(BUFFERS*2+1,textureID);
 
-	for (i=0; i<BUFFERS*2; i++)
+  for (int i=0; i<NOISETEXSIZE*NOISETEXSIZE*4; i++)
+  {
+    noiseTexData[i] = sin(sin(123523.9898*i)*43758.5453)*0.5+0.5;//sin(i*5000.5)*.5+.5;
+  }
+	for (i=0; i<BUFFERS*2+1; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D, textureID[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    if (i == BUFFERS*2)
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, NOISETEXSIZE, NOISETEXSIZE, 0, GL_RGBA, GL_FLOAT, noiseTexData);
+    else
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
+
 
   //Only one framebuffer to save line of codes, we change the render targets for each buffer in the rendering loop
 #endif
@@ -188,11 +194,10 @@ void main()
 #ifdef DEBUG
     //this displays the indices for each uniform, it helps if you want to hardcode indices in the render loop to save line of code for release version
     //PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
-    printf ("uniform id for VAR__ : %ld\n", glGetUniformLocation(program,"f"));
-    printf ("uniform id for VAR_PASSINDEX : %ld\n", glGetUniformLocation(program,"c"));
-    printf ("uniform id for VAR_B0 : %ld\n", glGetUniformLocation(program,"s"));
-    printf ("uniform id for VAR_B1 : %ld\n", glGetUniformLocation(program,"v"));
-    printf ("uniform id for VAR_B2 : %ld\n", glGetUniformLocation(program,"m"));
+    printf ("uniform id for VAR__ : %ld\n", glGetUniformLocation(program,VAR__));
+    printf ("uniform id for VAR_PASSINDEX : %ld\n", glGetUniformLocation(program,VAR_PASSINDEX));
+    printf ("uniform id for VAR_B0 : %ld\n", glGetUniformLocation(program,VAR_B0));
+    printf ("uniform id for VAR_NOISETEX : %ld\n", glGetUniformLocation(program,VAR_NOISETEX));
 #endif
 
 #ifdef AUDIO_TEXTURE
@@ -220,27 +225,27 @@ void main()
 
 
     glRects(-1,-1,0,0);
-    glFinish();
+  	wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
     glRects(0,-1,1,0);
-    glFinish();
+  	wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
     glRects(0,0,1,1);
-    glFinish();
+  	wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
     glRects(-1,0,0,1);
-    glFinish();
+  	wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
     //
 
-  	glReadPixels(0,  0,                      SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,soundBuffer);
-    glFinish();
-  	glReadPixels(0,  SOUND_TEXTURE_SIZE/4,   SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[MAX_SAMPLES/4]);
-    glFinish();
-  	glReadPixels(0,  2*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[2*MAX_SAMPLES/4]);
-    glFinish();
-  	glReadPixels(0,  3*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[3*MAX_SAMPLES/4]);
-    glFinish();
+  	// glReadPixels(0,  0,                      SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,soundBuffer);
+  	// wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
+  	// glReadPixels(0,  SOUND_TEXTURE_SIZE/4,   SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[MAX_SAMPLES/4]);
+  	// wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
+  	// glReadPixels(0,  2*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[2*MAX_SAMPLES/4]);
+  	// wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
+  	// glReadPixels(0,  3*SOUND_TEXTURE_SIZE/4, SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE/4, GL_RGBA,GL_FLOAT,&soundBuffer[3*MAX_SAMPLES/4]);
+  	// wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
 
-	glReadPixels(0,0,SOUND_TEXTURE_SIZE,SOUND_TEXTURE_SIZE,GL_RGBA,GL_FLOAT,soundBuffer);
+	  glReadPixels(0,  0,                      SOUND_TEXTURE_SIZE,   SOUND_TEXTURE_SIZE,   GL_RGBA,GL_FLOAT,soundBuffer);
   glViewport(0,0,width,height);
-  glFinish();
+  wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
 
 #ifdef DEBUG
 	for (i=0; i<10; i++)
@@ -251,13 +256,15 @@ void main()
 #endif
 #endif
 	audioStart();
-
+  float lastTime = audioGetTime();
 	do
 	{
 		// Avoid 'not responding' system messages.
 		PeekMessage(NULL, NULL, 0, 0, PM_REMOVE);
 
 		float time = audioGetTime();
+    float deltaTime = time-lastTime;
+    lastTime = time;
 
 		// Set uniforms here.
 		uniformTime = time;
@@ -266,19 +273,21 @@ void main()
 		// Given that they are the only uniforms in the shader, it is likely to work on all drivers.
 #ifdef BUFFERS
     glBindFramebuffer (GL_FRAMEBUFFER, fbo);
+		glActiveTexture(GL_TEXTURE0 + BUFFERS);
+		glBindTexture(GL_TEXTURE_2D, textureID[BUFFERS*2]);
+    glUniform1i(glGetUniformLocation(program,VAR_NOISETEX),BUFFERS);
 
 		for (i=0; i<BUFFERS; i++)
 		{
       //assign uniform value with hardcoded indices, use glGetUniformLocation is better but adds more line of codes
 			//uniforms can be automatically removed if not used, thus removes/offsets all the following uniforms !
-      // glUniform1fv(glGetUniformLocation(program,VAR__),UNIFORM_FLOAT_COUNT,uniforms);
-      // glUniform1i(glGetUniformLocation(program,VAR_PASSINDEX),i);
+      glUniform1fv(glGetUniformLocation(program,VAR__),UNIFORM_FLOAT_COUNT,uniforms);
+      glUniform1f(glGetUniformLocation(program,VAR_ITIMEDELTA),deltaTime);
+      glUniform1i(glGetUniformLocation(program,VAR_PASSINDEX),i);
       glUniform1i(glGetUniformLocation(program,VAR_B0),0);
-      glUniform1i(glGetUniformLocation(program,VAR_B1),1);
-      glUniform1i(glGetUniformLocation(program,VAR_B2),2);
 
-      glUniform1i(0,i); //int : (PASSINDEX)
-      glUniform1fv(1, UNIFORM_FLOAT_COUNT, uniforms); // floats "_[UNIFORM_FLOAT_COUNT]"
+      // glUniform1i(0,i); //int : (PASSINDEX)
+      // glUniform1fv(1, UNIFORM_FLOAT_COUNT, uniforms); // floats "_[UNIFORM_FLOAT_COUNT]"
       // glUniform1i(UNIFORM_FLOAT_COUNT+1+i,i); // samplers b0, b1 ..
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID[i*2+swapped], 0);
@@ -305,14 +314,9 @@ void main()
 		glRects(-1, -1, 1, 1);
 #endif
 
-		captureFrame();
-
 		wglSwapLayerBuffers(hdc, WGL_SWAP_MAIN_PLANE);
 	} while (
-#ifdef CLOSE_WHEN_FINISHED
-		!audioIsFinished() &&
-#endif
-		!GetAsyncKeyState(VK_ESCAPE));
+		!GetAsyncKeyState(VK_ESCAPE) && uniformTime < 76.0);
 
 	ExitProcess(0);
 }

@@ -19,6 +19,7 @@ typedef void(APIENTRYP PFNGLLINKPROGRAMPROC)(GLuint program);
 typedef void(APIENTRYP PFNGLSHADERSOURCEPROC)(GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length);
 typedef void(APIENTRYP PFNGLUSEPROGRAMPROC)(GLuint program);
 typedef void(APIENTRYP PFNGLUNIFORM1FVPROC)(GLint location, GLsizei count, const GLfloat *value);
+typedef void (APIENTRYP PFNGLUNIFORM1FPROC) (GLint location, GLfloat v0);
 #ifdef FRAMEBUFFER_NEED
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_COLOR_ATTACHMENT0 0x8CE0
@@ -54,7 +55,7 @@ typedef void (APIENTRYP PFNGLGETPROGRAMINFOLOGPROC) (GLuint program, GLsizei buf
 typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
 // end of glext.h fragment
 
-#define GL_EXT_FUNCTION_COUNT 15
+#define GL_EXT_FUNCTION_COUNT 16
 
 
 static const char *glExtFunctionNames[] = {
@@ -74,7 +75,8 @@ static const char *glExtFunctionNames[] = {
 	"glBindFramebuffer",
 	"glFramebufferTexture2D",
 	"glBlitFramebuffer",
-	"glGetUniformLocation"
+	"glGetUniformLocation",
+	"glUniform1f"
 
 };
 
@@ -97,3 +99,4 @@ static void *glExtFunctions[GL_EXT_FUNCTION_COUNT];
 #define glFramebufferTexture2D ((PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)glExtFunctions[12])
 #define glBlitFramebuffer ((PFNGLBLITFRAMEBUFFERPROC)glExtFunctions[13])
 #define glGetUniformLocation ((PFNGLGETUNIFORMLOCATIONPROC)glExtFunctions[14])
+#define glUniform1f ((PFNGLUNIFORM1FPROC)glExtFunctions[15])

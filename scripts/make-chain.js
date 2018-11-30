@@ -189,6 +189,7 @@ function makeChain(config, options) {
 			join(options.buildDirectory, 'shader.glsl'),
 			'-o',
 			join(options.buildDirectory, 'shader_min.h'),
+			//'--no-renaming',
 			'--no-renaming-list',
 			'Z,main,s,d1,d2,d3'
 				// join(options.buildDirectory, 'shader.glsl'),
@@ -196,6 +197,9 @@ function makeChain(config, options) {
 		.then(() => readFile(join(options.buildDirectory, 'shader_min.h')))
 		.then(contents => {
 			contents = contents.toString().replace('#define heretest','precision highp float;');
+			contents = contents.toString().replace(/.*clear\S/g,'"');
+			contents = contents.toString().replace(/;"/g,'\\n;"');
+
 			writeFile(join(options.buildDirectory, 'shader_min.h'), contents);
 		})
 		// .then(() => spawn('node', [
